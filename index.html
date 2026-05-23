@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EcoPegada - Calculadora de Carbono Diária</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        :root {
+            --primary: #10b981;
+            --primary-dark: #059669;
+            --primary-light: #e6f4ea;
+            --background: #f8fafc;
+            --surface: #ffffff;
+            --text: #0f172a;
+            --text-secondary: #475569;
+            --border: #e2e8f0;
+            --radius: 16px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+
+        body {
+            background-color: var(--background);
+            color: var(--text);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .app-container {
+            width: 100%;
+            max-width: 480px;
+            background: var(--surface);
+            border-radius: var(--radius);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+            overflow: hidden;
+            position: relative;
+            min-height: 600px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            padding: 24px;
+            text-align: center;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .header h1 {
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .header i {
+            color: var(--primary);
+        }
+
+        .content {
+            padding: 24px;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .screen {
+            display: none;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        .screen.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Home Screen */
+        .home-screen {
+            text-align: center;
+        }
+
+        .hero-icon {
+            width: 80px;
+            height: 80px;
+            background: var(--primary-light);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 24px;
+            color: var(--primary);
+        }
+
+        .home-screen h2 {
+            font-size: 1.8rem;
+            margin-bottom: 12px;
+            font-weight: 700;
+        }
+
+        .home-screen p {
+            color: var(--text-secondary);
+            margin-bottom: 32px;
+            line-height: 1.6;
+        }
+
+        /* Form Steps */
+        .step-indicator {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 32px;
+            position: relative;
+        }
+
+        .step-indicator::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: var(--border);
+            z-index: 1;
+            transform: translateY(-50%);
+        }
+
+        .step-dot {
+            width: 32px;
+            height: 32px;
+            background: var(--surface);
+            border: 2px solid var(--border);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2;
+            font-weight: 600;
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+        }
+
+        .step-dot.active {
+            border-color: var(--primary);
+            background: var(--primary);
+            color: white;
+        }
+
+        .step-dot.completed {
+            border-color: var(--primary);
+            background: var(--primary-light);
+            color: var(--primary);
+        }
+
+        .form-group {
+            margin-bottom: 24px;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .form-group p {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-bottom: 12px;
+        }
+
+        .input-range {
+            width: 100%;
+            accent-color: var(--primary);
+            height: 6px;
+            background: var(--border);
+            outline: none;
+        }
+
+        .range-val {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            margin-top: 6px;
+        }
+
+        /* Radio Grid */
+        .radio-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 12px;
+        }
+
+        .radio-card {
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            padding: 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .radio-card:hover {
+            border-color: var(--primary);
+        }
+
+        .radio-card.selected {
+            border-color: var(--primary);
+            background: var(--primary-light);
+        }
+
+        /* Buttons */
+        .btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 16px 24px;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn:hover { background: var(--primary-dark); }
+        .btn-secondary {
+            background: transparent;
+            color: var(--text-secondary);
+            border: 1px solid var(--border);
+            margin-top: 12px;
+        }
+
+        /* Results */
+        .results-card {
+            background: var(--primary-light);
+            border-radius: var(--radius);
+            padding: 24px;
+            text-align: center;
+            margin-bottom: 24px;
+        }
+
+        .co2-value {
+            font-size: 3rem;
+            font-weight: 800;
+        }
+
+        .co2-value span { font-size: 1.2rem; color: var(--text-secondary); }
+
+        .equivalent-box {
+            background: white;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            margin-top: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .tip-item {
+            background: var(--background);
+            border-left: 4px solid var(--primary);
+            padding: 12px;
+            border-radius: 0 8px 8px 0;
+            font-size: 0.9rem;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+        <div class="header">
+            <i data-lucide="leaf"></i>
+            <h1>EcoPegada</h1>
+        </div>
+
+        <div class="content">
+            <div id="screen-home" class="screen active">
+                <div class="home-screen">
+                    <div class="hero-icon"><i data-lucide="globe" size="40"></i></div>
+                    <h2>Mensure seu impacto hoje</h2>
+                    <p>Descubra a sua pegada de carbono diária respondendo a 3 perguntas simples baseadas na sua rotina ambiental.</p>
+                    <button class="btn" onclick="nextScreen(1)">Iniciar Cálculo <i data-lucide="arrow-right"></i></button>
+                </div>
+            </div>
+
+            <div id="screen-step1" class="screen">
+                <div class="step-indicator">
+                    <div class="step-dot active">1</div>
+                    <div class="step-dot">2</div>
+                    <div class="step-dot">3</div>
+                </div>
+                <div class="form-group">
+                    <label>Transporte Privado (Carro/Moto)</label>
+                    <p>Quantos quilômetros você rodou hoje?</p>
+                    <input type="range" id="input-car" class="input-range" min="0" max="100" value="0" oninput="updateLabel('car', this.value)">
+                    <div class="range-val"><span id="val-car">0 km</span><span>100 km</span></div>
+                </div>
+                <div class="form-group">
+                    <label>Transporte Público (Ônibus/Metrô)</label>
+                    <p>Quantos quilômetros rodou hoje?</p>
+                    <input type="range" id="input-bus" class="input-range" min="0" max="100" value="0" oninput="updateLabel('bus', this.value)">
+                    <div class="range-val"><span id="val-bus">0 km</span><span>100 km</span></div>
+                </div>
+                <button class="btn" onclick="nextScreen(2)">Avançar</button>
+                <button class="btn btn-secondary" onclick="nextScreen(0)">Voltar</button>
+            </div>
+
+            <div id="screen-step2" class="screen">
+                <div class="step-indicator">
+                    <div class="step-dot completed">1</div>
+                    <div class="step-dot active">2</div>
+                    <div class="step-dot">3</div>
+                </div>
+                <div class="form-group">
+                    <label>Sua alimentação hoje:</label>
+                    <div class="radio-grid">
+                        <div class="radio-card selected" onclick="selectDiet('meat', this)">
+                            <input type="radio" name="diet" id="diet-meat" value="meat" checked style="display:none">
+                            <div><strong>Com carne vermelha</strong></div>
+                        </div>
+                        <div class="radio-card" onclick="selectDiet('white', this)">
+                            <input type="radio" name="diet" id="diet-white" value="white" style="display:none">
+                            <div><strong>Carnes brancas / Ovos / Laticínios</strong></div>
+                        </div>
+                        <div class="radio-card" onclick="selectDiet('vegan', this)">
+                            <input type="radio" name="diet" id="diet-vegan" value="vegan" style="display:none">
+                            <div><strong>100% Vegana / Vegetariana</strong></div>
+                        </div>
+                    </div>
+                </div>
+                <button class="btn" onclick="nextScreen(3)">Avançar</button>
+                <button class="btn btn-secondary" onclick="nextScreen(1)">Voltar</button>
+            </div>
+
+            <div id="screen-step3" class="screen">
+                <div class="step-indicator">
+                    <div class="step-dot completed">1</div>
+                    <div class="step-dot completed">2</div>
+                    <div class="step-dot active">3</div>
+                </div>
+                <div class="form-group">
+                    <label>Tempo de Chuveiro Elétrico</label>
+                    <p>Quantos minutos de banho quente você tomou hoje?</p>
+                    <input type="range" id="input-shower" class="input-range" min="0" max="40" value="10" oninput="updateLabel('shower', this.value)">
+                    <div class="range-val"><span id="val-shower">10 min</span><span>40 min</span></div>
+                </div>
+                <button class="btn" onclick="calculateCarbon()">Calcular <i data-lucide="check"></i></button>
+                <button class="btn btn-secondary" onclick="nextScreen(2)">Voltar</button>
+            </div>
+
+            <div id="screen-result" class="screen">
+                <div class="results-card">
+                    <h3>Sua pegada de hoje foi de</h3>
+                    <div class="co2-value" id="total-co2">0.0 <span>kg CO₂</span></div>
+                    <div class="equivalent-box">
+                        <i data-lucide="trees" style="color: #059669"></i>
+                        <span id="tree-equivalent">Equivale a 0 árvores absorvendo.</span>
+                    </div>
+                </div>
+                <div id="tips-list"></div>
+                <button class="btn" onclick="nextScreen(0)" style="margin-top: 20px;">Refazer Teste</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        lucide.createIcons();
+
+        function nextScreen(num) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            if(num === 0) document.getElementById('screen-home').classList.add('active');
+            if(num === 1) document.getElementById('screen-step1').classList.add('active');
+            if(num === 2) document.getElementById('screen-step2').classList.add('active');
+            if(num === 3) document.getElementById('screen-step3').classList.add('active');
+            if(num === 4) document.getElementById('screen-result').classList.add('active');
+        }
+
+        function updateLabel(type, val) {
+            document.getElementById(`val-${type}`).innerText = val + (type === 'shower' ? ' min' : ' km');
+        }
+
+        function selectDiet(value, element) {
+            document.getElementById(`diet-${value}`).checked = true;
+            document.querySelectorAll('.radio-card').forEach(c => c.classList.remove('selected'));
+            element.classList.add('selected');
+        }
+
+        function calculateCarbon() {
+            // Regras de negócio e fatores de cálculo reais (MCTI Brasil)
+            const F_CAR = 0.18; const F_BUS = 0.03; const F_SHOWER = 0.05;
+            let f_diet = 1.2;
+
+            const diet = document.querySelector('input[name="diet"]:checked').value;
+            if(diet === 'meat') f_diet = 3.5;
+            if(diet === 'white') f_diet = 1.8;
+            if(diet === 'vegan') f_diet = 0.6;
+
+            const car = parseFloat(document.getElementById('input-car').value);
+            const bus = parseFloat(document.getElementById('input-bus').value);
+            const shower = parseFloat(document.getElementById('input-shower').value);
+
+            const total = (car * F_CAR) + (bus * F_BUS) + (shower * F_SHOWER) + f_diet;
+            const trees = Math.ceil(total / 0.04); // Absorção média diária de uma árvore
+
+            document.getElementById('total-co2').innerHTML = `${total.toFixed(1)} <span>kg CO₂</span>`;
+            document.getElementById('tree-equivalent').innerText = `Equivale ao que ${trees} árvores absorvem em 1 dia.`;
+
+            // Dicas Dinâmicas baseadas no padrão de uso
+            const list = document.getElementById('tips-list');
+            list.innerHTML = "<h4>Dicas de Mitigação:</h4>";
+            if(car > 20) list.innerHTML += "<div class='tip-item'>Seu maior gasto foi combustível. Tente usar bike ou transporte coletivo.</div>";
+            if(diet === 'meat') list.innerHTML += "<div class='tip-item'>Reduzir a carne vermelha uma vez na semana diminui drasticamente sua pegada ecológica.</div>";
+            if(shower > 15) list.innerHTML += "<div class='tip-item'>Diminuir 5 min do banho ajuda na conta de energia e no planeta!</div>";
+            
+            nextScreen(4);
+        }
+    </script>
+</body>
+</html>
